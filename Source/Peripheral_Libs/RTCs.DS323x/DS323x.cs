@@ -1,7 +1,6 @@
 using System;
 using Meadow.Foundation.Helpers;
 using Meadow.Hardware;
-using Meadow.Hardware.Communications;
 
 namespace Meadow.Foundation.RTCs
 {
@@ -170,9 +169,9 @@ namespace Meadow.Foundation.RTCs
         #region Member variables / fields
 
         /// <summary>
-        ///     DS323x Real Time Clock object.
+        /// DS323x Real Time Clock object.
         /// </summary>
-        protected ICommunicationBus _ds323x = null;
+        protected II2cBus _ds323x = null;
 
         /// <summary>
         ///     Interrupt port attached to the DS323x RTC module.
@@ -209,10 +208,10 @@ namespace Meadow.Foundation.RTCs
         {
             get
             {
-                var data = _ds323x.ReadRegisters(Registers.Seconds, DATE_TIME_REGISTERS_SIZE);
+                var data = _ds323x.ReadRegisters(0x68, Registers.Seconds, DATE_TIME_REGISTERS_SIZE);
                 return DecodeDateTimeRegisters(data);
             }
-            set { _ds323x.WriteRegisters(Registers.Seconds, EncodeDateTimeRegisters(value)); }
+            set { _ds323x.WriteRegisters(0x68, Registers.Seconds, EncodeDateTimeRegisters(value)); }
         }
 
         /// <summary>
@@ -222,7 +221,7 @@ namespace Meadow.Foundation.RTCs
         {
             get
             {
-                var data = _ds323x.ReadRegisters(Registers.TemperatureMSB, 2);
+                var data = _ds323x.ReadRegisters(0x68, Registers.TemperatureMSB, 2);
                 var temperature = (ushort) ((data[0] << 2) | (data[1] >> 6));
                 return temperature * 0.25;
             }
@@ -237,8 +236,8 @@ namespace Meadow.Foundation.RTCs
         /// </remarks>
         protected byte ControlRegister
         {
-            get { return _ds323x.ReadRegister(Registers.Control); }
-            set { _ds323x.WriteRegister(Registers.Control, value); }
+            get { return _ds323x.ReadRegister(0x68, Registers.Control); }
+            set { _ds323x.WriteRegister(0x68, Registers.Control, value); }
         }
 
         /// <summary>
@@ -250,8 +249,8 @@ namespace Meadow.Foundation.RTCs
         /// </remarks>
         protected byte ControlStatusRegister
         {
-            get { return _ds323x.ReadRegister(Registers.ControlStatus); }
-            set { _ds323x.WriteRegister(Registers.ControlStatus, value); }
+            get { return _ds323x.ReadRegister(0x68, Registers.ControlStatus); }
+            set { _ds323x.WriteRegister(0x68, Registers.ControlStatus, value); }
         }
 
         /// <summary>
@@ -284,21 +283,21 @@ namespace Meadow.Foundation.RTCs
         ///     Setup the interrupts.
         /// </summary>
         // TODO: re-examine this; maybe we need a `DigitalPin.None` prop
-        private IDigitalInputPort _interruptPin = null;// IDigitalPin.GPIO_NONE;
-        protected IDigitalInputPort InterruptPin
-        {
-            set
-            {
-                //TODO: I changed this from IDigitalPin.GPIO_NONE to null
-                if (_interruptPin != null)
-                {
-                    throw new Exception("Cannot change interrupt pin.");
-                }
-                _interruptPin = value;
-                _interruptPort = new DigitalInputPort(value, false, ResistorMode.Disabled);
-                _interruptPort.Changed += InterruptPort_Changed;
-            }
-        }
+        //private IDigitalInputPort _interruptPin = null;// IDigitalPin.GPIO_NONE;
+        //protected IDigitalInputPort InterruptPin
+        //{
+        //    set
+        //    {
+        //        //TODO: I changed this from IDigitalPin.GPIO_NONE to null
+        //        if (_interruptPin != null)
+        //        {
+        //            throw new Exception("Cannot change interrupt pin.");
+        //        }
+        //        _interruptPin = value;
+        //        _interruptPort = new DigitalInputPort(value, false, ResistorMode.Disabled);
+        //        _interruptPort.Changed += InterruptPort_Changed;
+        //    }
+        //}
 
         #endregion Properties
 
@@ -307,21 +306,21 @@ namespace Meadow.Foundation.RTCs
         /// <summary>
         ///     Alarm interrupt has been raised, work out which one and raise the necessary event.
         /// </summary>
-        private void InterruptPort_Changed(object sender, PortEventArgs e)
-        {
-            if ((OnAlarm1Raised != null) || (OnAlarm2Raised != null))
-            {
-                var alarm = WhichAlarm;
-                if (((alarm == Alarm.Alarm1Raised) || (alarm == Alarm.BothAlarmsRaised)) && (OnAlarm1Raised != null))
-                {
-                    OnAlarm1Raised(this);
-                }
-                if (((alarm == Alarm.Alarm2Raised) || (alarm == Alarm.BothAlarmsRaised)) && (OnAlarm2Raised != null))
-                {
-                    OnAlarm2Raised(this);
-                }
-            }
-        }
+        //private void InterruptPort_Changed(object sender, PortEventArgs e)
+        //{
+        //    if ((OnAlarm1Raised != null) || (OnAlarm2Raised != null))
+        //    {
+        //        var alarm = WhichAlarm;
+        //        if (((alarm == Alarm.Alarm1Raised) || (alarm == Alarm.BothAlarmsRaised)) && (OnAlarm1Raised != null))
+        //        {
+        //            OnAlarm1Raised(this);
+        //        }
+        //        if (((alarm == Alarm.Alarm2Raised) || (alarm == Alarm.BothAlarmsRaised)) && (OnAlarm2Raised != null))
+        //        {
+        //            OnAlarm2Raised(this);
+        //        }
+        //    }
+        //}
 
         /// <summary>
         ///     Decode the register contents and create a DateTime version of the
@@ -501,7 +500,7 @@ namespace Meadow.Foundation.RTCs
                     data[2] |= 0x40;
                     break;
             }
-            _ds323x.WriteRegisters(register, data);
+            _ds323x.WriteRegisters(0x68, register, data);
             //
             //  Turn the relevant alarm on.
             //
@@ -577,7 +576,7 @@ namespace Meadow.Foundation.RTCs
         /// </summary>
         public void DisplayRegisters()
         {
-            var data = _ds323x.ReadRegisters(0, 0x12);
+            var data = _ds323x.ReadRegisters(0x68, 0, 0x12);
             DebugInformation.DisplayRegisters(0, data);
         }
 
