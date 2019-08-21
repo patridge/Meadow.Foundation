@@ -19,9 +19,9 @@ namespace Meadow.Foundation.RTCs
         /// </summary>
         /// <param name="device"></param>
         /// <param name="interruptPin">Digital pin connected to the alarm interrupt pin on the RTC.</param>
-        public DS3231(IIODevice device, IPin[] i2cPins)
+        public DS3231(IIODevice device, IPin clock, IPin data)
         {
-            _ds323x = device.CreateI2cBus(i2cPins, 100);
+            _ds323x = device.CreateI2cBus(clock, data, 100);
         }
 
         /// <summary>

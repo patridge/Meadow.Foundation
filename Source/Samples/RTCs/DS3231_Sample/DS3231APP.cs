@@ -9,6 +9,7 @@ namespace DS3231_Sample
 {
     public class DS3231App : App<F7Micro, DS3231App>
     {
+        IDigitalOutputPort _blueLED;
         IDigitalOutputPort _redLED;
         IDigitalOutputPort _greenLED;
 
@@ -21,18 +22,26 @@ namespace DS3231_Sample
 
             _greenLED = Device.CreateDigitalOutputPort(Device.Pins.OnboardLedGreen);
 
-            IPin[] i2cPins = new IPin[2] { Device.Pins.I2C_SCL, Device.Pins.I2C_SDA };
-            ds3231 = new DS3231(Device, i2cPins);
+            ds3231 = new DS3231(Device, Device.Pins.I2C_SCL, Device.Pins.I2C_SDA);
+
+            TestDS3231();
         }
 
         protected void TestDS3231()
         {
-            ds3231.CurrentDateTime = DateTime.Now;
-
-            Thread.Sleep(3000);
+            var state = false;
 
             _redLED.State = false;
-            _greenLED.State = true;
+            //ds3231.CurrentDateTime = DateTime.Now;
+
+            while (true)
+            {
+                Console.WriteLine(ds3231.CurrentDateTime);
+
+                _greenLED.State = true;
+                Thread.Sleep(1000);
+                _greenLED.State = false;
+            }
         }
     }
 }
