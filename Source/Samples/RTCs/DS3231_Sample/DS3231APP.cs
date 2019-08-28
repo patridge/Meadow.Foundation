@@ -9,7 +9,6 @@ namespace DS3231_Sample
 {
     public class DS3231App : App<F7Micro, DS3231App>
     {
-        IDigitalOutputPort _blueLED;
         IDigitalOutputPort _redLED;
         IDigitalOutputPort _greenLED;
 
@@ -17,6 +16,8 @@ namespace DS3231_Sample
 
         public DS3231App()
         {
+            Console.WriteLine("Initializing...");
+
             _redLED = Device.CreateDigitalOutputPort(Device.Pins.OnboardLedRed);
             _redLED.State = true;
 
@@ -29,6 +30,7 @@ namespace DS3231_Sample
 
         protected void TestDS3231()
         {
+            Console.WriteLine("Starting...");
             var state = false;
 
             _redLED.State = false;

@@ -207,11 +207,19 @@ namespace Meadow.Foundation.RTCs
         public DateTime CurrentDateTime
         {
             get
-            {
-                var data = _ds323x.ReadRegisters(0x68, Registers.Seconds, DATE_TIME_REGISTERS_SIZE);
+            { 
+                Console.WriteLine("[DS323x] Getting data...");
+                var data = _ds323x.ReadData(Registers.Seconds, DATE_TIME_REGISTERS_SIZE);
+                Console.WriteLine("[DS323x] Data acquired... length: {0}", data.Length);
+
+                foreach(var item in data)
+                    Console.Write("{0} ", item);
+
+                Console.WriteLine();
+
                 return DecodeDateTimeRegisters(data);
             }
-            set { _ds323x.WriteRegisters(0x68, Registers.Seconds, EncodeDateTimeRegisters(value)); }
+            set { _ds323x.WriteData(Registers.Seconds, EncodeDateTimeRegisters(value)); }
         }
 
         /// <summary>
@@ -221,7 +229,7 @@ namespace Meadow.Foundation.RTCs
         {
             get
             {
-                var data = _ds323x.ReadRegisters(0x68, Registers.TemperatureMSB, 2);
+                var data = _ds323x.ReadData(Registers.TemperatureMSB, 2);
                 var temperature = (ushort) ((data[0] << 2) | (data[1] >> 6));
                 return temperature * 0.25;
             }
@@ -234,10 +242,10 @@ namespace Meadow.Foundation.RTCs
         ///     Control register contains the following bit (in sequence b7 - b0):
         ///     EOSC - BBSQW - CONV - RS1 - RS2 - INTCN - A2IE - A1IE
         /// </remarks>
-        protected byte ControlRegister
+        protected byte[] ControlRegister
         {
-            get { return _ds323x.ReadRegister(0x68, Registers.Control); }
-            set { _ds323x.WriteRegister(0x68, Registers.Control, value); }
+            get { return _ds323x.ReadData(Registers.Control, 1); }
+            set { _ds323x.WriteData(Registers.Control, value); }
         }
 
         /// <summary>
@@ -247,10 +255,10 @@ namespace Meadow.Foundation.RTCs
         ///     Control and status register contains the following bit (in sequence b7 - b0):
         ///     OSF - 0 - 0 - 0 - EN32KHZ - BSY - A2F - A1F
         /// </remarks>
-        protected byte ControlStatusRegister
+        protected byte[] ControlStatusRegister
         {
-            get { return _ds323x.ReadRegister(0x68, Registers.ControlStatus); }
-            set { _ds323x.WriteRegister(0x68, Registers.ControlStatus, value); }
+            get { return _ds323x.ReadData(Registers.ControlStatus, 1); }
+            set { _ds323x.WriteData(Registers.ControlStatus, value); }
         }
 
         /// <summary>
@@ -262,16 +270,16 @@ namespace Meadow.Foundation.RTCs
             {
                 var result = Alarm.Unknown;
 
-                byte controlStatusRegister = ControlStatusRegister;
-                if (((controlStatusRegister & 0x01) != 0) && ((controlStatusRegister & 0x02) != 0))
+                byte[] controlStatusRegister = ControlStatusRegister;
+                if (((controlStatusRegister[0] & 0x01) != 0) && ((controlStatusRegister[0] & 0x02) != 0))
                 {
                     result = Alarm.BothAlarmsRaised;
                 }
-                if ((controlStatusRegister & 0x01) != 0)
+                if ((controlStatusRegister[0] & 0x01) != 0)
                 {
                     result = Alarm.Alarm1Raised;
                 }
-                if ((controlStatusRegister & 0x02) != 0)
+                if ((controlStatusRegister[0] & 0x02) != 0)
                 {
                     result = Alarm.Alarm2Raised;
                 }
@@ -330,8 +338,13 @@ namespace Meadow.Foundation.RTCs
         /// <returns>DateTime object version of the data.</returns>
         protected DateTime DecodeDateTimeRegisters(byte[] data)
         {
-            var seconds = Converters.BCDToByte(data[0]);
+            Console.WriteLine("[DS323x] Decoding...");
+
+            Console.WriteLine("[DS323x] Seconds..." + data[0]);
+            var seconds = data[0];
+            Console.WriteLine("[DS323x] Seconds..." + seconds);
             var minutes = Converters.BCDToByte(data[1]);
+            Console.WriteLine("[DS323x] Minutes..." + minutes);
             byte hour = 0;
             if ((data[2] & 0x40) != 0)
             {
@@ -500,7 +513,7 @@ namespace Meadow.Foundation.RTCs
                     data[2] |= 0x40;
                     break;
             }
-            _ds323x.WriteRegisters(0x68, register, data);
+            _ds323x.WriteData(register, data);
             //
             //  Turn the relevant alarm on.
             //
@@ -510,8 +523,8 @@ namespace Meadow.Foundation.RTCs
             {
                 bits = (byte) ControlRegisterBits.A2IE;
             }
-            controlRegister |= (byte) ControlRegisterBits.INTCON;
-            controlRegister |= bits;
+            controlRegister[0] |= (byte) ControlRegisterBits.INTCON;
+            controlRegister[0] |= bits;
             ControlRegister = controlRegister;
         }
 
@@ -522,27 +535,27 @@ namespace Meadow.Foundation.RTCs
         /// <param name="enable">Alarm state, true = on, false = off.</param>
         public void EnableDisableAlarm(Alarm alarm, bool enable)
         {
-            byte controlRegister = ControlRegister;
+            byte[] controlRegister = ControlRegister;
             if (alarm == Alarm.Alarm1Raised)
             {
                 if (enable)
                 {
-                    controlRegister |= ALARM1_ENABLE;
+                    controlRegister[0] |= ALARM1_ENABLE;
                 }
                 else
                 {
-                    controlRegister &= ALARM1_DISABLE;
+                    controlRegister[0] &= ALARM1_DISABLE;
                 }
             }
             else
             {
                 if (enable)
                 {
-                    controlRegister |= ALARM2_ENABLE;
+                    controlRegister[0] |= ALARM2_ENABLE;
                 }
                 else
                 {
-                    controlRegister &= ALARM2_DISABLE;
+                    controlRegister[0] &= ALARM2_DISABLE;
                 }
             }
             ControlRegister = controlRegister;
@@ -558,14 +571,14 @@ namespace Meadow.Foundation.RTCs
             switch (alarm)
             {
                 case Alarm.Alarm1Raised:
-                    controlStatusRegister &= ALARM1_INTERRUPT_OFF;
+                    controlStatusRegister[0] &= ALARM1_INTERRUPT_OFF;
                     break;
                 case Alarm.Alarm2Raised:
-                    controlStatusRegister &= ALARM2_INTERRUPT_OFF;
+                    controlStatusRegister[0] &= ALARM2_INTERRUPT_OFF;
                     break;
                 case Alarm.BothAlarmsRaised:
-                    controlStatusRegister &= ALARM1_INTERRUPT_OFF;
-                    controlStatusRegister &= ALARM2_INTERRUPT_OFF;
+                    controlStatusRegister[0] &= ALARM1_INTERRUPT_OFF;
+                    controlStatusRegister[0] &= ALARM2_INTERRUPT_OFF;
                     break;
             }
             ControlStatusRegister = controlStatusRegister;
@@ -576,7 +589,7 @@ namespace Meadow.Foundation.RTCs
         /// </summary>
         public void DisplayRegisters()
         {
-            var data = _ds323x.ReadRegisters(0x68, 0, 0x12);
+            var data = _ds323x.ReadData(0, 0x12);
             DebugInformation.DisplayRegisters(0, data);
         }
 
