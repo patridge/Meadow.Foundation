@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections;
 using Meadow.Foundation.Displays;
-using Meadow.Foundation.Sensors.Rotary;
 using Meadow.Foundation.Displays.TextDisplayMenu.InputTypes;
-using Meadow.Foundation.Sensors.Buttons;
 using System.Diagnostics;
 using Meadow.Peripherals.Displays;
 using Meadow.Peripherals.Sensors.Rotary;

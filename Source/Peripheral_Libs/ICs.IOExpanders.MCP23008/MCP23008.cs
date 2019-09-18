@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using Meadow.Hardware;
-using Meadow.Hardware.Communications;
+//using Meadow.Hardware.Communications;
 using Meadow.Utilities;
 
 /*

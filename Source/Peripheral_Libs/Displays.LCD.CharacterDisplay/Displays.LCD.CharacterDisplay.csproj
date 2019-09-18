@@ -1,10 +1,11 @@
-﻿<Project Sdk="Meadow.Sdk/1.0">
+﻿<Project Sdk="Meadow.Sdk/1.1">
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <OutputType>Library</OutputType>
-    <AssemblyName>Displays.LCD.CharacterDisplay</AssemblyName>
+    <AssemblyName>CharacterDisplay</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="WildernessLabs.Meadow.Assemblies" Version="0.1.0" />
+    <PackageReference Include="WildernessLabs.Meadow.Assemblies" Version="0.1.1" />
+    <PackageReference Include="Meadow" Version="0.6.245" />
   </ItemGroup>
 </Project>
