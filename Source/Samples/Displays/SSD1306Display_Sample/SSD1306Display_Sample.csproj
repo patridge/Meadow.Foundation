@@ -6,7 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Meadow" Version="0.7.0" />
-    <PackageReference Include="Meadow.Foundation" Version="0.7.227" />
+    <PackageReference Include="Meadow.Foundation" Version="0.8.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\Peripheral_Libs\Displays.GraphicsLibrary\Displays.GraphicsLibrary.csproj" />
